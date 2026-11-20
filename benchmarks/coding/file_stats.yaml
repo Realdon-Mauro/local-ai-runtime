@@ -1,0 +1,153 @@
+id: coding.file_stats
+version: 2
+category: coding
+
+name: File Statistics Analyzer
+description: >
+  Implementazione di una funzione per analizzare dimensioni ed estensioni
+  di un insieme di file, con gestione rigorosa degli input non validi.
+
+required_capabilities:
+  - completion
+
+prompt: |
+  Scrivi una funzione Python chiamata analyze_files(files).
+
+  VALIDAZIONE DEGLI INPUT:
+  - files deve essere una lista Python. Qualsiasi altro tipo deve
+    generare ValueError, anche None.
+  - Ogni elemento deve essere un dizionario.
+  - Ogni dizionario deve contenere le chiavi "name" e "size".
+  - "name" deve essere una stringa contenente almeno un carattere
+    diverso dagli spazi. Una stringa vuota o composta solo da spazi
+    deve generare ValueError.
+  - "size" deve essere un intero maggiore o uguale a zero.
+  - bool NON è un intero valido per questo requisito, anche se
+    in Python bool è una sottoclasse di int.
+  - Qualsiasi input non valido deve generare ValueError.
+
+  CALCOLI:
+  - file_count: numero di file.
+  - total_size: somma delle dimensioni.
+  - average_size: dimensione media, come numero float.
+  - largest_file: DEVE essere il nome del file (stringa), non il
+    dizionario. In caso di parità scegli il primo file incontrato.
+  - extensions: dizionario con il conteggio delle estensioni.
+
+  REGOLE PER LE ESTENSIONI:
+  - Le chiavi devono includere il punto iniziale, ad esempio ".txt".
+  - Le estensioni devono essere convertite in minuscolo.
+  - I nomi senza estensione devono usare la chiave "[no_extension]".
+  - Un nome che inizia con un punto e non contiene altri punti,
+    come ".gitignore", è considerato privo di estensione.
+  - Esempi: "file.TXT" -> ".txt"; "script.Py" -> ".py".
+
+  LISTA VUOTA:
+  Se files è una lista vuota, restituisci:
+  - file_count: 0
+  - total_size: 0
+  - average_size: 0.0
+  - largest_file: None
+  - extensions: {}
+
+  Il risultato deve essere un dizionario con ESATTAMENTE queste
+  chiavi:
+  file_count, total_size, average_size, largest_file, extensions.
+
+  Usa soltanto la libreria standard Python.
+  Restituisci esclusivamente codice Python, senza Markdown,
+  spiegazioni o esempi aggiuntivi.
+evaluation:
+  type: python_unittest
+  timeout_seconds: 10
+
+  test_code: |
+    import unittest
+    from solution import analyze_files
+
+
+    class TestAnalyzeFiles(unittest.TestCase):
+
+        def test_empty_list(self):
+            result = analyze_files([])
+
+            self.assertEqual(result["file_count"], 0)
+            self.assertEqual(result["total_size"], 0)
+            self.assertEqual(result["average_size"], 0.0)
+            self.assertIsNone(result["largest_file"])
+            self.assertEqual(result["extensions"], {})
+
+        def test_basic_statistics(self):
+            files = [
+                {"name": "document.txt", "size": 100},
+                {"name": "image.png", "size": 300},
+                {"name": "script.py", "size": 200},
+            ]
+
+            result = analyze_files(files)
+
+            self.assertEqual(result["file_count"], 3)
+            self.assertEqual(result["total_size"], 600)
+            self.assertEqual(result["average_size"], 200.0)
+            self.assertEqual(result["largest_file"], "image.png")
+
+        def test_extensions_are_case_insensitive(self):
+            files = [
+                {"name": "first.TXT", "size": 10},
+                {"name": "second.txt", "size": 20},
+                {"name": "third.Py", "size": 30},
+            ]
+
+            result = analyze_files(files)
+
+            self.assertEqual(
+                result["extensions"],
+                {".txt": 2, ".py": 1},
+            )
+
+        def test_files_without_extension(self):
+            files = [
+                {"name": ".gitignore", "size": 10},
+                {"name": "README", "size": 20},
+            ]
+
+            result = analyze_files(files)
+
+            self.assertEqual(
+                result["extensions"],
+                {"[no_extension]": 2},
+            )
+
+        def test_first_file_wins_on_size_tie(self):
+            files = [
+                {"name": "first.bin", "size": 500},
+                {"name": "second.bin", "size": 500},
+            ]
+
+            result = analyze_files(files)
+
+            self.assertEqual(result["largest_file"], "first.bin")
+
+        def test_invalid_container_raises_value_error(self):
+            with self.assertRaises(ValueError):
+                analyze_files(None)
+
+        def test_invalid_record_raises_value_error(self):
+            with self.assertRaises(ValueError):
+                analyze_files([{"name": "file.txt"}])
+
+        def test_negative_size_raises_value_error(self):
+            with self.assertRaises(ValueError):
+                analyze_files([{"name": "file.txt", "size": -1}])
+
+        def test_boolean_size_raises_value_error(self):
+            with self.assertRaises(ValueError):
+                analyze_files([{"name": "file.txt", "size": True}])
+
+        def test_empty_name_raises_value_error(self):
+            with self.assertRaises(ValueError):
+                analyze_files([{"name": " ", "size": 10}])
+
+
+    if __name__ == "__main__":
+        unittest.main()
