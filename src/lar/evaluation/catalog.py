@@ -36,7 +36,7 @@ class ModelCatalog:
                     scan_id INTEGER NOT NULL,
                     name TEXT NOT NULL,
                     digest TEXT,
-                    size_bytes INTEGER NOT NULL,
+                    size_bytes INTEGER,
                     modified_at TEXT,
                     metadata_json TEXT NOT NULL,
                     inspection_error TEXT,

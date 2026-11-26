@@ -1,6 +1,6 @@
 # LAR — Architettura
 
-**Stato:** specifica progettuale v1, basata sull’ispezione statica del repository il 20 novembre 2026. Descrive la visione richiesta, non funzionalità già implementate. Nessun codice o test è stato modificato/eseguito in questo incarico.
+**Stato:** specifica progettuale v1, basata sull’ispezione statica del repository il 20 novembre 2026 e integrata con le evidenze benchmark del 16 novembre e dell’audit OpenCode v2.2.7. Descrive l’architettura target, non funzionalità già implementate. L’implementazione verificata resta circoscritta a inventory/benchmark CLI e al singolo ciclo documentato in `LAR_IMPLEMENTATION_GAP_ANALYSIS.md`; i componenti progettati per chat orchestration e gateway non risultano implementati. I test non sono stati eseguiti in questa revisione.
 
 ## Visione e confini
 
@@ -51,7 +51,7 @@ Scoperta/versionamento artifact Ollama tramite digest e quantizzazione; profili 
 Gestisce stato osservato, ownership, load/unload, singola lease, cambio modello, idle timeout e reconcile. Errore unload lascia stato unknown/reconciling e impedisce nuovo managed load finché riconciliato. I modelli esterni non si scaricano. La lease inferenziale non coincide con il numero di modelli in memoria.
 
 ### Inference Provider
-OllamaInferenceProvider è l’unico backend v1: health, discovery, inspect, elenco running, load/unload, chat e streaming. Traduce esclusivamente qui errori e payload Ollama. L’astrazione non introduce altri backend implementati.
+OllamaInferenceProvider è l’unico backend v1: health, discovery, inspect, elenco running, load/unload, generate e chat/stream tramite `/api/chat`. L’adapter valida chunk NDJSON e risposta finale, conserva `tool_calls` come handoff e non esegue strumenti né applica retry. La cancellazione del client chiude la richiesta HTTP ma non prova l’arresto fisico Ollama; il provider v1 non espone una conferma affidabile. L’astrazione non introduce altri backend implementati.
 
 ### Observability e Storage
 Log JSON UTC con request ID, decision ID, model digest, fase, durata, errore e risorse; non includono prompt/completion/secret per default. Metriche di coda, load, first token, token, generazione e risorse sono separate dai benchmark. SQLite contiene configurazioni non segrete, catalogo/profili, benchmark, metadata richieste, decisioni, lifecycle e snapshot con schema versionato.

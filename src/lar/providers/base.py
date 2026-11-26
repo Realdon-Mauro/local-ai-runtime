@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -8,6 +9,14 @@ class ProviderError(Exception):
 
 class ProviderConnectionError(ProviderError):
     """Errore di connessione a un provider."""
+
+
+class ProviderGenerationError(ProviderError):
+    """Il provider ha rifiutato o interrotto una generazione."""
+
+
+class ProviderStreamError(ProviderError):
+    """Lo stream del provider è malformato o incompleto."""
 
 
 @dataclass(frozen=True)
@@ -55,6 +64,27 @@ class GenerationResponse:
     raw: dict[str, Any]
 
 
+@dataclass(frozen=True, slots=True)
+class ChatResponse:
+    """Messaggio chat completo restituito dal provider."""
+
+    message: Mapping[str, Any]
+    usage: GenerationUsage
+    done_reason: str | None
+    raw: Mapping[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ChatChunk:
+    """Evento NDJSON normalizzato; raw resta confinato al boundary provider."""
+
+    message: Mapping[str, Any]
+    done: bool
+    usage: GenerationUsage | None = None
+    done_reason: str | None = None
+    raw: Mapping[str, Any] | None = None
+
+
 class GenerationProvider(Protocol):
     """Contratto comune per i provider di generazione."""
 
@@ -67,3 +97,13 @@ class GenerationProvider(Protocol):
     ) -> GenerationResponse:
         """Genera una risposta utilizzando il modello indicato."""
         ...
+
+
+class ChatProvider(Protocol):
+    """Contratto chat: non esegue i tool che il modello restituisce."""
+
+    async def chat(self, request: Mapping[str, Any]) -> ChatResponse: ...
+
+    def stream_chat(self, request: Mapping[str, Any]) -> AsyncIterator[ChatChunk]: ...
+
+    async def close(self) -> None: ...

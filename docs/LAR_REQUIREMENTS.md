@@ -69,4 +69,6 @@ Riferimento: LAR_ARCHITECTURE.md. P0 = necessario a v1; P1 = qualità operativa 
 
 **E2E OpenCode:** profilo temporaneo OpenAI-compatible su loopback/lar-auto; JSON, SSE, tool handoff e OpenCode execution; IDs/errors/FIFO/cancel; fallback pre-output e no-fallback post-delta; prompt sintetici e log senza raw content.
 
-Stato attuale: test letti ma non eseguiti; nessun risultato dichiarato.
+## Stato delle evidenze
+
+I criteri nelle tabelle e nel piano sono requisiti/criteri di accettazione, non dichiarazioni di copertura già raggiunta. Nel ciclo di lavoro del 16 novembre 2026 sono stati riportati 106 test superati e Ruff senza errori; non sono stati rieseguiti in questa revisione e non dimostrano requisiti per componenti ancora assenti. Il benchmark `coding.file_stats` ha avuto un primo ciclo end-to-end salvato in SQLite con `qwen2.5-coder:7b`: 3/10 casi, score 0,30, throughput 53,74 token/s. È evidenza di quel singolo benchmark, non una valutazione generale del modello. Per lo stato implementativo dettagliato e i limiti si veda `LAR_IMPLEMENTATION_GAP_ANALYSIS.md`.

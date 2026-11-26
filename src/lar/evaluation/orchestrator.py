@@ -56,16 +56,13 @@ class BenchmarkOrchestrator:
 
         results = []
 
-        try:
-            async with self.model_manager.lease(model):
-                for benchmark in benchmarks:
-                    result = await self.runner.run(model, benchmark)
-                    results.append(result)
+        async with self.model_manager.lease(model):
+            for benchmark in benchmarks:
+                result = await self.runner.run(model, benchmark)
+                results.append(result)
 
-                    if self.store is not None:
-                        self.store.save_result(result)
-        finally:
-            await self.model_manager.unload(model)
+                if self.store is not None:
+                    self.store.save_result(result)
 
         return results
 

@@ -76,5 +76,5 @@ def test_model_entry_can_be_converted_to_dictionary():
     data = entry.to_dict()
 
     assert data["name"] == "tinyllama:1.1b"
-    assert data["size_bytes"] == 0
+    assert data["size_bytes"] is None
     assert data["capabilities"] == []

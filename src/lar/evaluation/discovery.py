@@ -8,7 +8,7 @@ from lar.providers.ollama import OllamaError, OllamaProvider
 class ModelInventoryEntry:
     name: str
     digest: str | None = None
-    size_bytes: int = 0
+    size_bytes: int | None = None
     modified_at: str | None = None
 
     format: str | None = None
@@ -41,7 +41,13 @@ async def discover_models(
         entry = ModelInventoryEntry(
             name=name,
             digest=installed.get("digest"),
-            size_bytes=installed.get("size", 0),
+            size_bytes=(
+                installed["size"]
+                if isinstance(installed.get("size"), int)
+                and not isinstance(installed.get("size"), bool)
+                and installed["size"] > 0
+                else None
+            ),
             modified_at=installed.get("modified_at"),
             format=details.get("format"),
             family=details.get("family"),

@@ -17,6 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
+lar = "lar.runtime_cli:main"
 lar-bench = "lar.cli:main"
 
 [project.optional-dependencies]

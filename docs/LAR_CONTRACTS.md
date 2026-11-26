@@ -16,8 +16,8 @@ Responsabilità: composizione, lifecycle, health, use-case application; indipend
 Dipendenze: contratti gateway/scheduler/provider/repository/config. Errori: LARConfigurationError, ProviderUnavailableError, StorageError, ShutdownError. Invarianti: close blocca submit e chiude risorse una volta. Test: startup down, shutdown con queue/active, idempotenza e leak.
 
 ### InferenceProvider
-Metodi: async health_check() -> ProviderHealth; async discover_models() -> Sequence[ModelInfo]; async inspect_model(model_id: str) -> ModelInfo; async list_running() -> Sequence[ProviderModelState]; async load_model(model_id: str, *, options: LoadOptions) -> ProviderModelState; async unload_model(model_id: str) -> None; async stream_chat(request: ProviderInferenceRequest) -> AsyncIterator[InferenceEvent]; async close() -> None.
-Responsabilità: unica implementazione Ollama API mapping.
+Metodi implementati dal provider v1: `chat(request)` per una risposta completa e `stream_chat(request)` per eventi chat NDJSON; health/discovery/load/unload/generate restano disponibili. I chunk mantengono messaggio assistant, tool calls, `done`, motivo e metriche finali quando presenti.
+Responsabilità: unica implementazione Ollama API mapping; il provider restituisce tool call, non li esegue. Nessun retry implicito. La chiusura/cancellazione HTTP non costituisce prova di terminazione fisica; senza verifier affidabile il runtime deve restare bloccato secondo ADR-006.
 Dipendenze: HTTP client e DTO provider isolati. Errori: ProviderUnavailableError, ProviderModelNotFoundError, ProviderProtocolError, ProviderTimeoutError, ProviderGenerationError, ProviderStreamError. Invarianti: stream cancellabile, error mapping, no hidden retries after emitted output. Test: MockTransport, invalid shape, HTTP, timeout, disconnect/cancel, tools/capabilities.
 
 ### ModelManager

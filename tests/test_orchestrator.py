@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
@@ -10,10 +11,6 @@ class FakeModelManager:
     def __init__(self):
         self.active_leases = 0
         self.lease_count = 0
-        self.unload_calls = []
-
-    async def unload(self, model):
-        self.unload_calls.append(model)
 
     @asynccontextmanager
     async def lease(self, model):
@@ -207,13 +204,12 @@ async def test_batch_uses_one_lease_and_saves_each_result():
     assert len(results) == 3
     assert manager.lease_count == 1
     assert manager.active_leases == 0
-    assert manager.unload_calls == ["test-model"]
     assert store.saved == results
     assert runner.max_concurrent_calls == 1
 
 
 @pytest.mark.asyncio
-async def test_batch_releases_and_unloads_after_runner_error():
+async def test_batch_releases_without_unload_after_runner_error():
     manager = FakeModelManager()
     runner = FakeRunner(
         manager,
@@ -230,5 +226,30 @@ async def test_batch_releases_and_unloads_after_runner_error():
         await orchestrator.run_batch_for_model("test-model", benchmarks)
 
     assert manager.active_leases == 0
-    assert manager.unload_calls == ["test-model"]
     assert len(runner.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_batch_cancellation_releases_lease_without_unload():
+    manager = FakeModelManager()
+    started = asyncio.Event()
+    hold = asyncio.Event()
+
+    class BlockingRunner(FakeRunner):
+        async def run(self, model, benchmark):
+            started.set()
+            await hold.wait()
+
+    orchestrator = BenchmarkOrchestrator(manager, BlockingRunner(manager))
+    task = asyncio.create_task(
+        orchestrator.run_batch_for_model(
+            "test-model", [SimpleNamespace(id="coding.one")]
+        )
+    )
+    await started.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert manager.active_leases == 0

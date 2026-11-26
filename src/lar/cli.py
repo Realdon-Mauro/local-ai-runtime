@@ -26,7 +26,10 @@ def format_size(size_bytes: int) -> str:
 
 def print_model(model: ModelInventoryEntry, index: int, total: int) -> None:
     print(f"\n[{index}/{total}] {model.name}")
-    print(f"  Dimensione:     {format_size(model.size_bytes)}")
+    print(
+        "  Dimensione:     "
+        f"{format_size(model.size_bytes) if model.size_bytes is not None else 'N/D'}"
+    )
     print(f"  Famiglia:       {model.family or 'N/D'}")
     print(f"  Parametri:      {model.parameter_size or 'N/D'}")
     print(f"  Quantizzazione: {model.quantization_level or 'N/D'}")
